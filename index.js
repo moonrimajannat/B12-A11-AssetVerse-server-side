@@ -24,7 +24,29 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
+    const usersCollection = client.db('AssetVerse').collection('usersCollection');
 
+    app.post("/users", async (req, res) => {
+      try {
+        const userInfo = req.body;
+        console.log(userInfo)
+
+        // Check if user already exists
+        const existingUser = await usersCollection.findOne({
+          email: userInfo.email,
+        });
+
+        if (existingUser) {
+          return res.status(409).send({ message: "User already exists" });
+        }
+
+        const result = await usersCollection.insertOne(userInfo);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
 
 
 
