@@ -29,7 +29,6 @@ async function run() {
     app.post("/users", async (req, res) => {
       try {
         const userInfo = req.body;
-        console.log(userInfo)
 
         // Check if user already exists
         const existingUser = await usersCollection.findOne({
@@ -47,6 +46,24 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+
+      try {
+        const user = await usersCollection.findOne({ email });
+
+        if (!user) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send(user);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
 
 
 
