@@ -6,6 +6,13 @@ const port = process.env.PORT || 5000;
 require('dotenv').config();
 
 // middleware
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://assetverse-46a0f.web.app",
+  ],
+  credentials: true
+}));
 app.use(cors());
 app.use(express.json());
 
