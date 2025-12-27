@@ -33,6 +33,7 @@ async function run() {
 
     const usersCollection = client.db('AssetVerse').collection('usersCollection');
     const packagesCollection = client.db('AssetVerse').collection('packagesCollection');
+    const assetsCollection = client.db('AssetVerse').collection('assetsCollection');
 
     app.post("/users", async (req, res) => {
       try {
@@ -75,6 +76,14 @@ async function run() {
     app.get("/packages", async (req, res) => {
 
       const cursor = packagesCollection.find();
+
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/assets", async (req, res) => {
+
+      const cursor = assetsCollection.find();
 
       const result = await cursor.toArray();
       res.send(result);
