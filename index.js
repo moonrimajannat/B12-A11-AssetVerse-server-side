@@ -121,19 +121,25 @@ async function run() {
       res.send(result);
     });
 
-    // // DELETE an asset
-    // app.delete("/assets/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const result = await assetsCollection.deleteOne({ _id: id });
-    //   res.send(result);
-    // });
-
     app.delete("/assets/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await assetsCollection.deleteOne(query);
       res.send(result);
     })
+
+    // UPDATE an asset
+    app.put("/assets/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+
+      const result = await assetsCollection.updateOne(
+        { _id:  new ObjectId(id) },
+        { $set: updatedData }
+      );
+
+      res.send(result);
+    });
 
 
 
