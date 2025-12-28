@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config();
@@ -28,7 +28,7 @@ const verifyFBToken = async (req, res, next) => {
   try {
     const idToken = token.split(' ')[1];
     const decoded = await admin.auth().verifyIdToken(idToken);
-    console.log('decoded in the token', decoded);
+    // console.log('decoded in the token', decoded);
     req.decoded_email = decoded.email;
     next();
   }
@@ -121,12 +121,24 @@ async function run() {
       res.send(result);
     });
 
+    // // DELETE an asset
+    // app.delete("/assets/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const result = await assetsCollection.deleteOne({ _id: id });
+    //   res.send(result);
+    // });
+
+    app.delete("/assets/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await assetsCollection.deleteOne(query);
+      res.send(result);
+    })
 
 
 
 
 
-    
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
