@@ -134,8 +134,21 @@ async function run() {
       const updatedData = req.body;
 
       const result = await assetsCollection.updateOne(
-        { _id:  new ObjectId(id) },
+        { _id: new ObjectId(id) },
         { $set: updatedData }
+      );
+
+      res.send(result);
+    });
+
+    //update-profile
+    app.put("/users/profile-image/:email", async (req, res) => {
+      const email = req.params.email;
+      const { profileImage } = req.body;
+
+      const result = await usersCollection.updateOne(
+        { email: email },
+        { $set: { profileImage } }
       );
 
       res.send(result);
