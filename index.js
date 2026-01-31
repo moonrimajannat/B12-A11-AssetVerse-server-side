@@ -141,7 +141,7 @@ async function run() {
       res.send(result);
     });
 
-    //update-profile
+    //update-profile-image
     app.put("/users/profile-image/:email", async (req, res) => {
       const email = req.params.email;
       const { profileImage } = req.body;
@@ -153,6 +153,26 @@ async function run() {
 
       res.send(result);
     });
+
+    // update profile
+    app.put("/users/profile/:email", async (req, res) => {
+      const email = req.params.email;
+      const { name, companyName, dateOfBirth } = req.body;
+
+      // create an object with only the fields that are sent
+      const updatedData = {};
+      if (name) updatedData.name = name;
+      if (companyName) updatedData.companyName = companyName;
+      if (dateOfBirth) updatedData.dateOfBirth = dateOfBirth;
+
+      const result = await usersCollection.updateOne(
+        { email: email },
+        { $set: updatedData }
+      );
+
+      res.send(result);
+    });
+
 
 
 
