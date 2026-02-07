@@ -218,7 +218,7 @@ async function run() {
       res.send(result);
     });
 
-    
+    // request approved
     app.patch("/asset-requests/approve/:id", verifyFBToken, async (req, res) => {
       try {
         const id = req.params.id;
@@ -291,6 +291,35 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    // request rejected
+    app.patch("/asset-requests/reject/:id", verifyFBToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Update request status to rejected
+        const result = await requestsCollection.updateOne(
+          { _id: new ObjectId(id), requestStatus: "pending" },
+          {
+            $set: {
+              requestStatus: "rejected",
+              approvalDate: new Date().toISOString().split("T")[0],
+              processedBy: req.decoded_email,
+            },
+          }
+        );
+
+        if (result.modifiedCount === 0) {
+          return res.status(400).send({ message: "Request not found or already processed" });
+        }
+
+        res.send({ modifiedCount: result.modifiedCount });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
 
 
 
