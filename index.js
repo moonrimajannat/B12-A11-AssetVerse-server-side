@@ -55,6 +55,7 @@ async function run() {
     const usersCollection = client.db('AssetVerse').collection('usersCollection');
     const packagesCollection = client.db('AssetVerse').collection('packagesCollection');
     const assetsCollection = client.db('AssetVerse').collection('assetsCollection');
+    const requestsCollection = client.db('AssetVerse').collection('requestsCollection');
 
     app.post("/users", async (req, res) => {
       try {
@@ -116,6 +117,25 @@ async function run() {
       }
 
       const cursor = assetsCollection.find();
+
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/asset-requests", verifyFBToken, async (req, res) => {
+      const email = req.query.email;
+      const query = {}
+
+      if (email) {
+        query.customerEmail = email;
+
+        // check email address
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: 'forbidden access' })
+        }
+      }
+
+      const cursor = requestsCollection.find();
 
       const result = await cursor.toArray();
       res.send(result);
