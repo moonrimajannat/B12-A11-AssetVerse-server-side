@@ -143,6 +143,25 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/employees", verifyFBToken, async (req, res) => {
+      const email = req.query.email;
+      const query = {}
+
+      if (email) {
+        query.customerEmail = email;
+
+        // check email address
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: 'forbidden access' })
+        }
+      }
+
+      const cursor = employeeAffiliationsCollection.find();
+
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.delete("/assets/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -224,7 +243,9 @@ async function run() {
         const id = req.params.id;
 
         // Find the request
-        const request = await requestsCollection.findOne({ _id: new ObjectId(id) });
+        const request = await requestsCollection.findOne({
+          _id: new ObjectId(id)
+        });
 
         if (!request || request.requestStatus !== "pending") {
           return res.status(400).send({ message: "Invalid request" });
@@ -240,7 +261,7 @@ async function run() {
           return res.status(400).send({ message: "Asset not available" });
         }
 
-        // Update request status to approved
+        // Update request status
         await requestsCollection.updateOne(
           { _id: new ObjectId(id) },
           {
@@ -267,22 +288,32 @@ async function run() {
           status: "assigned",
         });
 
-        // Create affiliation if first approved request
-        const existingAffiliation = await employeeAffiliationsCollection.findOne({
-          employeeEmail: request.requesterEmail,
-          status: "active"
-        });
+        // Check existing affiliation
+        const existingAffiliation =
+          await employeeAffiliationsCollection.findOne({
+            employeeEmail: request.requesterEmail,
+            status: "active",
+          });
 
         if (!existingAffiliation) {
+          // Create affiliation (first asset)
           await employeeAffiliationsCollection.insertOne({
             employeeEmail: request.requesterEmail,
             employeeName: request.employeeName,
+            employeePhoto: request.employeePhoto || "",
             hrEmail: req.decoded_email,
             companyName: request.companyName,
             companyLogo: request.companyLogo || "",
             affiliationDate: new Date().toISOString().split("T")[0],
-            status: "active"
+            assetsCount: 1,
+            status: "active",
           });
+        } else {
+          // Increment asset count
+          await employeeAffiliationsCollection.updateOne(
+            { _id: existingAffiliation._id },
+            { $inc: { assetsCount: 1 } }
+          );
         }
 
         res.send({ modifiedCount: 1 });
@@ -291,6 +322,7 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
 
     // request rejected
     app.patch("/asset-requests/reject/:id", verifyFBToken, async (req, res) => {
@@ -319,6 +351,61 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    //remove employee
+    app.patch("/employees/remove/:id", verifyFBToken, async (req, res) => {
+      const id = req.params.id;
+
+      // Get affiliation
+      const affiliation = await employeeAffiliationsCollection.findOne({
+        _id: new ObjectId(id),
+        status: "active",
+      });
+
+      if (!affiliation) {
+        return res.status(404).send({ message: "Employee not found" });
+      }
+
+      // Mark affiliation inactive
+      await employeeAffiliationsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            status: "inactive",
+            assetsCount: 0
+          }
+        }
+      );
+
+      // Find active assets
+      const assignedAssets = await assignedAssetsCollection.find({
+        employeeEmail: affiliation.employeeEmail,
+        status: "assigned"
+      }).toArray();
+
+      for (const asset of assignedAssets) {
+        // Mark asset returned
+        await assignedAssetsCollection.updateOne(
+          { _id: asset._id },
+          {
+            $set: {
+              status: "returned",
+              returnDate: new Date().toISOString().split("T")[0]
+            }
+          }
+        );
+
+        // Increase available quantity
+        await assetsCollection.updateOne(
+          { _id: asset.assetId },
+          { $inc: { availableQuantity: 1 } }
+        );
+      }
+
+      res.send({ modifiedCount: 1 });
+    });
+
+
 
 
 
