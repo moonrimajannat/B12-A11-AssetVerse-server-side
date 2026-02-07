@@ -56,6 +56,8 @@ async function run() {
     const packagesCollection = client.db('AssetVerse').collection('packagesCollection');
     const assetsCollection = client.db('AssetVerse').collection('assetsCollection');
     const requestsCollection = client.db('AssetVerse').collection('requestsCollection');
+    const assignedAssetsCollection = client.db('AssetVerse').collection('assignedAssetsCollection');
+    const employeeAffiliationsCollection = client.db('AssetVerse').collection('employeeAffiliationsCollection');
 
     app.post("/users", async (req, res) => {
       try {
@@ -215,6 +217,83 @@ async function run() {
       const result = await assetsCollection.insertOne(assetData);
       res.send(result);
     });
+
+    
+    app.patch("/asset-requests/approve/:id", verifyFBToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Find the request
+        const request = await requestsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!request || request.requestStatus !== "pending") {
+          return res.status(400).send({ message: "Invalid request" });
+        }
+
+        // Deduct asset quantity
+        const assetUpdate = await assetsCollection.updateOne(
+          { _id: request.assetId, availableQuantity: { $gt: 0 } },
+          { $inc: { availableQuantity: -1 } }
+        );
+
+        if (assetUpdate.modifiedCount === 0) {
+          return res.status(400).send({ message: "Asset not available" });
+        }
+
+        // Update request status to approved
+        await requestsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              requestStatus: "approved",
+              approvalDate: new Date().toISOString().split("T")[0],
+              processedBy: req.decoded_email,
+            },
+          }
+        );
+
+        // Insert into assignedAssets
+        await assignedAssetsCollection.insertOne({
+          assetId: request.assetId,
+          assetName: request.assetName,
+          assetImage: request.assetImage || "",
+          assetType: request.assetType,
+          employeeEmail: request.requesterEmail,
+          employeeName: request.employeeName,
+          hrEmail: req.decoded_email,
+          companyName: request.companyName,
+          assignmentDate: new Date().toISOString().split("T")[0],
+          returnDate: null,
+          status: "assigned",
+        });
+
+        // Create affiliation if first approved request
+        const existingAffiliation = await employeeAffiliationsCollection.findOne({
+          employeeEmail: request.requesterEmail,
+          status: "active"
+        });
+
+        if (!existingAffiliation) {
+          await employeeAffiliationsCollection.insertOne({
+            employeeEmail: request.requesterEmail,
+            employeeName: request.employeeName,
+            hrEmail: req.decoded_email,
+            companyName: request.companyName,
+            companyLogo: request.companyLogo || "",
+            affiliationDate: new Date().toISOString().split("T")[0],
+            status: "active"
+          });
+        }
+
+        res.send({ modifiedCount: 1 });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+
+
 
 
 
