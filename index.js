@@ -173,6 +173,32 @@ async function run() {
       res.send(result);
     });
 
+    // add asset
+    app.post("/assets", verifyFBToken, async (req, res) => {
+      const asset = req.body;
+
+      if (asset.hrEmail !== req.decoded_email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const assetData = {
+        productName: asset.productName,
+        productImage: asset.productImage,
+        productType: asset.productType,
+        productQuantity: parseInt(asset.productQuantity),
+        availableQuantity: parseInt(asset.availableQuantity),
+        dateAdded: asset.dateAdded,
+        hrEmail: asset.hrEmail,
+        companyName: asset.companyName,
+      };
+
+      const result = await assetsCollection.insertOne(assetData);
+      res.send(result);
+    });
+
+
+
+
 
 
 
