@@ -487,6 +487,19 @@ async function run() {
     app.post("/asset-requests", verifyFBToken, async (req, res) => {
       try {
         const request = req.body;
+        const { assetId, requesterEmail } = req.body;
+
+        const existingRequest = await requestsCollection.findOne({
+          assetId: new ObjectId(assetId),
+          requesterEmail,
+          requestStatus: "pending"
+        });
+
+        if (existingRequest) {
+          return res.status(409).send({
+            message: "You already have a pending request for this asset"
+          });
+        }
 
         const newRequest = {
           assetId: new ObjectId(request.assetId),
