@@ -426,6 +426,65 @@ async function run() {
       res.send({ modifiedCount: 1 });
     });
 
+    //returned asset
+    app.patch("/assets/return/:id", verifyFBToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        // Find assigned asset
+        const assignedAsset = await assignedAssetsCollection.findOne({
+          _id: new ObjectId(id),
+          status: "assigned",
+        });
+
+        if (!assignedAsset) {
+          return res.status(400).send({ message: "Invalid asset return" });
+        }
+
+        // Security check
+        if (assignedAsset.employeeEmail !== req.decoded_email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
+        // Check asset type
+        if (assignedAsset.assetType !== "Returnable") {
+          return res.status(400).send({ message: "Asset is not returnable" });
+        }
+
+        // Mark asset as returned
+        await assignedAssetsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              status: "returned",
+              returnDate: new Date().toISOString().split("T")[0],
+            },
+          }
+        );
+
+        // Increase available quantity
+        await assetsCollection.updateOne(
+          { _id: assignedAsset.assetId },
+          { $inc: { availableQuantity: 1 } }
+        );
+
+        // Decrease employee asset count
+        await employeeAffiliationsCollection.updateOne(
+          {
+            employeeEmail: assignedAsset.employeeEmail,
+            status: "active",
+          },
+          { $inc: { assetsCount: -1 } }
+        );
+
+        res.send({ modifiedCount: 1 });
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+
 
 
 
