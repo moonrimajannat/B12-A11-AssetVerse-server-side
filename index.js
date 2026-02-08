@@ -303,7 +303,8 @@ async function run() {
           employeeName: request.employeeName,
           hrEmail: req.decoded_email,
           companyName: request.companyName,
-          assignmentDate: new Date().toISOString().split("T")[0],
+          requestDate: request.requestDate,
+          approvalDate: new Date().toISOString().split("T")[0],
           returnDate: null,
           status: "assigned",
         });
