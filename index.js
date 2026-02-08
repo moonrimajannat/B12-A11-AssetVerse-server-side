@@ -501,8 +501,7 @@ async function run() {
           approvalDate: null,
           requestStatus: "pending",
           note: request.note || "",
-          processedBy: null,
-          createdAt: new Date()
+          processedBy: request.hrEmail,
         };
 
         const result = await requestsCollection.insertOne(newRequest);
