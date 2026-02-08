@@ -344,7 +344,6 @@ async function run() {
       }
     });
 
-
     // request rejected
     app.patch("/asset-requests/reject/:id", verifyFBToken, async (req, res) => {
       try {
@@ -483,6 +482,38 @@ async function run() {
         res.status(500).send({ message: "Server error" });
       }
     });
+
+    //request asset
+    app.post("/asset-requests", verifyFBToken, async (req, res) => {
+      try {
+        const request = req.body;
+
+        const newRequest = {
+          assetId: new ObjectId(request.assetId),
+          assetName: request.assetName,
+          assetType: request.assetType,
+          assetImage: request.assetImage || "",
+          employeeName: request.employeeName,
+          requesterEmail: request.requesterEmail,
+          hrEmail: request.hrEmail,
+          companyName: request.companyName,
+          requestDate: request.requestDate,
+          approvalDate: null,
+          requestStatus: "pending",
+          note: request.note || "",
+          processedBy: null,
+          createdAt: new Date()
+        };
+
+        const result = await requestsCollection.insertOne(newRequest);
+        res.send(result);
+
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Failed to create asset request" });
+      }
+    });
+
 
 
 
