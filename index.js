@@ -162,6 +162,26 @@ async function run() {
       res.send(result);
     });
 
+    // Employee assets
+    app.get("/my-assets", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+
+        // security check
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
+        const assets = await assignedAssetsCollection.find({ employeeEmail: email }).sort({ assignmentDate: -1 }).toArray();
+
+        res.send(assets);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+
     app.delete("/assets/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
