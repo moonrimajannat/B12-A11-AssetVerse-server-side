@@ -98,10 +98,10 @@ async function run() {
     });
 
     app.get("/employee-affiliations/:email", async (req, res) => {
-      const email = req.params.email;
+      const employeeEmail = req.params.email;
 
       try {
-        const user = await employeeAffiliationsCollection.findOne({ email });
+        const user = await employeeAffiliationsCollection.findOne({ employeeEmail });
 
         if (!user) {
           return res.status(404).send({ message: "User not found" });
