@@ -530,7 +530,7 @@ async function run() {
     // GET companies for logged-in employee
     app.get("/my-companies", verifyFBToken, async (req, res) => {
       try {
-        const email = req.query.email;
+        const email = req.user.email;
 
         const companies = await assignedAssetsCollection
           .find(
