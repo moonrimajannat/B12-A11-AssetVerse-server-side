@@ -530,12 +530,7 @@ async function run() {
     // GET companies for logged-in employee
     app.get("/my-companies", verifyFBToken, async (req, res) => {
       try {
-        const email = req.query.email;
-
-        if (email !== req.decoded_email) {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
-
+      
         const companies = await assignedAssetsCollection
           .find(
             { employeeEmail: email, status: "assigned" },
