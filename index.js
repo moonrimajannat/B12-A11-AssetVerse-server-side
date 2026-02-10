@@ -97,23 +97,6 @@ async function run() {
       }
     });
 
-    app.get("/employee-affiliations/:email", async (req, res) => {
-      const employeeEmail = req.params.email;
-
-      try {
-        const user = await employeeAffiliationsCollection.findOne({ employeeEmail });
-
-        if (!user) {
-          return res.status(404).send({ message: "User not found" });
-        }
-
-        res.send(user);
-      } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: "Server error" });
-      }
-    });
-
     app.get("/packages", async (req, res) => {
 
       const cursor = packagesCollection.find();
@@ -570,6 +553,12 @@ async function run() {
     // GET team members by company
     app.get("/my-team", verifyFBToken, async (req, res) => {
       try {
+        const email = req.query.email;
+
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
         const companyName = req.query.company;
 
         // Step 2: get all active employees in company
