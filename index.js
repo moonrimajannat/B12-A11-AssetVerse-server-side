@@ -544,6 +544,31 @@ async function run() {
     });
 
 
+    // GET companies for logged-in employee
+    app.get("/my-companies", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
+        const companies = await employeeAffiliationsCollection
+          .find(
+            { employeeEmail: email, status: "active" },
+            { projection: { companyName: 1, _id: 0 } }
+          )
+          .toArray();
+
+        res.send(companies);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+
+
 
 
 
