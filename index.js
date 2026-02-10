@@ -572,17 +572,6 @@ async function run() {
       try {
         const companyName = req.query.company;
 
-        // Step 1: verify HR owns this company
-        const company = await employeeAffiliationsCollection.findOne({
-          companyName,
-          hrEmail: req.decoded_email,
-          status: "active"
-        });
-
-        if (!company) {
-          return res.status(403).send({ message: "Unauthorized company access" });
-        }
-
         // Step 2: get all active employees in company
         const affiliations = await employeeAffiliationsCollection
           .find({ companyName, status: "active" })
