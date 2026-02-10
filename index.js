@@ -530,7 +530,7 @@ async function run() {
     // GET companies for logged-in employee
     app.get("/my-companies", verifyFBToken, async (req, res) => {
       try {
-        const email = req.user.email; // make sure you're getting email from token
+        const email = req.user.email;
 
         // Fetch all assigned assets for the employee
         const companies = await assignedAssetsCollection
@@ -540,10 +540,7 @@ async function run() {
           )
           .toArray();
 
-        // Extract company names and remove duplicates
-        const uniqueCompanies = [...new Set(companies.map(c => c.companyName))];
-
-        res.send(uniqueCompanies);
+          res.send(companies);
       } catch (err) {
         console.error(err);
         res.status(500).send({ message: "Server error" });
