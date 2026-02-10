@@ -573,8 +573,8 @@ async function run() {
         const companyName = req.query.company;
 
         // Step 2: get all active employees in company
-        const affiliations = await employeeAffiliationsCollection
-          .find({ companyName, status: "active" })
+        const affiliations = await assignedAssetsCollection
+          .find({ companyName, status: "assigned" })
           .toArray();
 
         const employeeEmails = affiliations.map(a => a.employeeEmail);
