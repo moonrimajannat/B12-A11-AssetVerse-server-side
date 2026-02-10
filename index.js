@@ -97,6 +97,23 @@ async function run() {
       }
     });
 
+    app.get("/employee-affiliations/:email", async (req, res) => {
+      const email = req.params.email;
+
+      try {
+        const user = await employeeAffiliationsCollection.findOne({ email });
+
+        if (!user) {
+          return res.status(404).send({ message: "User not found" });
+        }
+
+        res.send(user);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     app.get("/packages", async (req, res) => {
 
       const cursor = packagesCollection.find();
