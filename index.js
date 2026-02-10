@@ -567,6 +567,62 @@ async function run() {
       }
     });
 
+    // GET team members by company
+    app.get("/my-team", verifyFBToken, async (req, res) => {
+      try {
+        const companyName = req.query.company;
+
+        // Step 1: verify HR owns this company
+        const company = await employeeAffiliationsCollection.findOne({
+          companyName,
+          hrEmail: req.decoded_email,
+          status: "active"
+        });
+
+        if (!company) {
+          return res.status(403).send({ message: "Unauthorized company access" });
+        }
+
+        // Step 2: get all active employees in company
+        const affiliations = await employeeAffiliationsCollection
+          .find({ companyName, status: "active" })
+          .toArray();
+
+        const employeeEmails = affiliations.map(a => a.employeeEmail);
+
+        // Step 3: fetch employee profiles
+        const employees = await usersCollection
+          .find(
+            { email: { $in: employeeEmails }, role: "employee" },
+            {
+              projection: {
+                name: 1,
+                email: 1,
+                profileImage: 1,
+                dateOfBirth: 1,
+                position: 1
+              }
+            }
+          )
+          .toArray();
+
+        // Step 4: format response
+        const formatted = employees.map(emp => ({
+          name: emp.name,
+          email: emp.email,
+          photo: emp.profileImage,
+          dob: emp.dateOfBirth,
+          position: emp.position || "Employee"
+        }));
+
+        res.send(formatted);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+
 
 
 
