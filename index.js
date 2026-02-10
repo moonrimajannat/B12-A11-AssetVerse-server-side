@@ -532,6 +532,10 @@ async function run() {
       try {
         const email = req.query.email;
 
+        if (email !== req.decoded_email) {
+          return res.status(403).send({ message: "Forbidden access" });
+        }
+
         const companies = await assignedAssetsCollection
           .find(
             { employeeEmail: email, status: "assigned" },
