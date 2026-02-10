@@ -530,12 +530,9 @@ async function run() {
     // GET companies for logged-in employee
     app.get("/my-companies", verifyFBToken, async (req, res) => {
       try {
-        const email = req.query.email;
+        const email = req.user.email; // make sure you're getting email from token
 
-        if (email !== req.decoded_email) {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
-
+        // Fetch all assigned assets for the employee
         const companies = await assignedAssetsCollection
           .find(
             { employeeEmail: email, status: "assigned" },
@@ -543,12 +540,16 @@ async function run() {
           )
           .toArray();
 
-        res.send(companies);
+        // Extract company names and remove duplicates
+        const uniqueCompanies = [...new Set(companies.map(c => c.companyName))];
+
+        res.send(uniqueCompanies);
       } catch (err) {
         console.error(err);
         res.status(500).send({ message: "Server error" });
       }
     });
+
 
     // GET team members by company
     app.get("/my-team", verifyFBToken, async (req, res) => {
