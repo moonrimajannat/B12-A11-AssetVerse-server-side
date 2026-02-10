@@ -527,24 +527,24 @@ async function run() {
     });
 
 
-    // GET companies for logged-in employee
-    app.get("/my-companies", verifyFBToken, async (req, res) => {
-      try {
-        const email = req.query.email;
+    // // GET companies for logged-in employee
+    // app.get("/my-companies", verifyFBToken, async (req, res) => {
+    //   try {
+    //     const email = req.query.email;
 
-        const companies = await assignedAssetsCollection
-          .find(
-            { employeeEmail: email, status: "assigned" },
-            { projection: { companyName: 1, _id: 0 } }
-          )
-          .toArray();
+    //     const companies = await assignedAssetsCollection
+    //       .find(
+    //         { employeeEmail: email, status: "assigned" },
+    //         { projection: { companyName: 1, _id: 0 } }
+    //       )
+    //       .toArray();
 
-        res.send(companies);
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: "Server error" });
-      }
-    });
+    //     res.send(companies);
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: "Server error" });
+    //   }
+    // });
 
 
     // GET team members by company
