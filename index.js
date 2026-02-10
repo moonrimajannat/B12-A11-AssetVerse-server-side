@@ -553,9 +553,9 @@ async function run() {
           return res.status(403).send({ message: "Forbidden access" });
         }
 
-        const companies = await employeeAffiliationsCollection
+        const companies = await assignedAssetsCollection
           .find(
-            { employeeEmail: email, status: "active" },
+            { employeeEmail: email, status: "assigned" },
             { projection: { companyName: 1, _id: 0 } }
           )
           .toArray();
