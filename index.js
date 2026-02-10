@@ -532,10 +532,6 @@ async function run() {
       try {
         const email = req.query.email;
 
-        if (email !== req.decoded_email) {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
-
         const companies = await assignedAssetsCollection
           .find(
             { employeeEmail: email, status: "assigned" },
@@ -554,11 +550,6 @@ async function run() {
     // GET team members by company
     app.get("/my-team", verifyFBToken, async (req, res) => {
       try {
-        const email = req.query.email;
-
-        if (email !== req.decoded_email) {
-          return res.status(403).send({ message: "Forbidden access" });
-        }
 
         const companyName = req.query.company;
 
